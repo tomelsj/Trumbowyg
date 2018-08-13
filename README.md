@@ -61,19 +61,15 @@ All you need to know about Trumbowyg is here: http://alex-d.github.io/Trumbowyg/
 ## Contribution
 
 You can contribute to Trumbowyg with translations in languages you know.
-Thanks to `node` and `gulp`, you can improve core script, style or icons easily.
+Thanks to `node` you can improve core script, style or icons easily.
 
 First, fork and clone the repository
 
 ```bash
 cd Trumbowyg # to go into the project's root directory
 npm install # to install development dependencies
-npm install -g bower gulp # to install bower and gulp command if you don't have them already
-bower install # to install Trumbowyg dependencies (ie: jQuery)
-gulp build # to build the project
+npm run build # to build the js and css files
 ```
-
-`gulp` command launch default Gulp task watcher and rebuild on the fly.
 
 
 ## Stay in touch

@@ -1,4 +1,43 @@
-jQuery.trumbowyg = {
+import './ui/sass/trumbowyg.scss';
+
+import './ui/icons/blockquote.svg';
+import './ui/icons/bold.svg';
+import './ui/icons/close.svg';
+import './ui/icons/create-link.svg';
+import './ui/icons/del.svg';
+import './ui/icons/em.svg';
+import './ui/icons//fontsize.svg';
+import './ui/icons//fullscreen.svg';
+import './ui/icons//h1.svg';
+import './ui/icons//h2.svg';
+import './ui/icons//h3.svg';
+import './ui/icons//h4.svg';
+import './ui/icons/horizontal-rule.svg';
+import './ui/icons/insert-image.svg';
+import './ui/icons/italic.svg';
+import './ui/icons/justify-center.svg';
+import './ui/icons/justify-full.svg';
+import './ui/icons/justify-left.svg';
+import './ui/icons/justify-right.svg';
+import './ui/icons/lineheight.svg';
+import './ui/icons/link.svg';
+import './ui/icons/ordered-list.svg';
+import './ui/icons/p.svg';
+import './ui/icons/redo.svg';
+import './ui/icons/removeformat.svg';
+import './ui/icons/strikethrough.svg';
+import './ui/icons/strong.svg';
+import './ui/icons/subscript.svg';
+import './ui/icons/superscript.svg';
+import './ui/icons/table.svg';
+import './ui/icons/underline.svg';
+import './ui/icons/undo.svg';
+import './ui/icons/unlink.svg';
+import './ui/icons/unordered-list.svg';
+import './ui/icons/view-html.svg';
+
+
+export var trumbowyg = {
     langs: {
         en: {
             viewHTML: 'View HTML',
@@ -66,7 +105,7 @@ jQuery.trumbowyg = {
 };
 
 // Makes default options read-only
-Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
+Object.defineProperty(trumbowyg, 'defaultOptions', {
     value: {
         lang: 'en',
 
@@ -114,71 +153,82 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
     configurable: false
 });
 
+var activeTrumbowygs = [];
 
-(function (navigator, window, document, $) {
+(function (navigator, window, document, trumbowyg, activeTrumbowygs) {
     'use strict';
 
     var CONFIRM_EVENT = 'tbwconfirm',
         CANCEL_EVENT = 'tbwcancel';
 
-    $.fn.trumbowyg = function (options, params) {
+    trumbowyg.init = function (element, options, params) {
         var trumbowygDataName = 'trumbowyg';
         if (options === Object(options) || !options) {
-            return this.each(function () {
-                if (!$(this).data(trumbowygDataName)) {
-                    $(this).data(trumbowygDataName, new Trumbowyg(this, options));
+            let elearr = element;
+            if (!Array.isArray(elearr)) {
+                elearr = [element];
+            }
+            
+            for (let te of elearr) {
+                if (!te.dataset[trumbowygDataName]) {
+                    activeTrumbowygs.push(new Trumbowyg(te, options));
+                    te.dataset[trumbowygDataName] = activeTrumbowygs.length - 1;
                 }
-            });
+            }
+            
+            return element;
         }
-        if (this.length === 1) {
+        if (element.length === 1) {
             try {
-                var t = $(this).data(trumbowygDataName);
+                var t = activeTrumbowygs[element.dataset[trumbowygDataName]];
                 switch (options) {
-                    // Exec command
-                    case 'execCmd':
-                        return t.execCmd(params.cmd, params.param, params.forceCss);
+                // Exec command
+                case 'execCmd':
+                    return t.execCmd(params.cmd, params.param, params.forceCss);
 
-                    // Modal box
-                    case 'openModal':
-                        return t.openModal(params.title, params.content);
-                    case 'closeModal':
-                        return t.closeModal();
-                    case 'openModalInsert':
-                        return t.openModalInsert(params.title, params.fields, params.callback);
+                // Modal box
+                case 'openModal':
+                    return t.openModal(params.title, params.content);
+                case 'closeModal':
+                    return t.closeModal();
+                case 'openModalInsert':
+                    return t.openModalInsert(params.title, params.fields, params.callback);
 
-                    // Range
-                    case 'saveRange':
-                        return t.saveRange();
-                    case 'getRange':
-                        return t.range;
-                    case 'getRangeText':
-                        return t.getRangeText();
-                    case 'restoreRange':
-                        return t.restoreRange();
+                // Range
+                case 'saveRange':
+                    return t.saveRange();
+                case 'getRange':
+                    return t.range;
+                case 'getRangeText':
+                    return t.getRangeText();
+                case 'restoreRange':
+                    return t.restoreRange();
 
-                    // Enable/disable
-                    case 'enable':
-                        return t.setDisabled(false);
-                    case 'disable':
-                        return t.setDisabled(true);
+                // Enable/disable
+                case 'enable':
+                    return t.setDisabled(false);
+                case 'disable':
+                    return t.setDisabled(true);
 
-                    // Toggle
-                    case 'toggle':
-                        return t.toggle();
+                // Toggle
+                case 'toggle':
+                    return t.toggle();
 
-                    // Destroy
-                    case 'destroy':
-                        return t.destroy();
+                // Destroy
+                case 'destroy':
+                    return t.destroy();
 
-                    // Empty
-                    case 'empty':
-                        return t.empty();
+                // Empty
+                case 'empty':
+                    return t.empty();
 
-                    // HTML
-                    case 'html':
-                        return t.html(params);
+                // HTML
+                case 'html':
+                    return t.html(params);
                 }
-            } catch (c) {
+            }
+            catch (e) {
+                console.error(e);
             }
         }
 
@@ -188,39 +238,39 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
     // @param: editorElem is the DOM element
     var Trumbowyg = function (editorElem, options) {
         var t = this,
-            trumbowygIconsId = 'trumbowyg-icons',
-            $trumbowyg = $.trumbowyg;
+            trumbowygIconsId = 'trumbowyg-icons';
 
         // Get the document of the element. It use to makes the plugin
         // compatible on iframes.
         t.doc = editorElem.ownerDocument || document;
 
         // jQuery object of the editor
-        t.$ta = $(editorElem); // $ta : Textarea
-        t.$c = $(editorElem); // $c : creator
+        t.$ta = editorElem; // $ta : Textarea
+        t.$c = editorElem; // $c : creator
 
         options = options || {};
 
         // Localization management
-        if (options.lang != null || $trumbowyg.langs[options.lang] != null) {
-            t.lang = $.extend(true, {}, $trumbowyg.langs.en, $trumbowyg.langs[options.lang]);
+        if (options.lang != null || trumbowyg.langs[options.lang] != null) {
+            t.lang = Object.create(trumbowyg.langs.en);
+            Object.assign(t.lang, trumbowyg.langs[options.lang]);
         } else {
-            t.lang = $trumbowyg.langs.en;
+            t.lang = trumbowyg.langs.en;
         }
 
-        t.hideButtonTexts = $trumbowyg.hideButtonTexts != null ? $trumbowyg.hideButtonTexts : options.hideButtonTexts;
+        t.hideButtonTexts = trumbowyg.hideButtonTexts != null ? trumbowyg.hideButtonTexts : options.hideButtonTexts;
 
         // SVG path
-        var svgPathOption = $trumbowyg.svgPath != null ? $trumbowyg.svgPath : options.svgPath;
+        var svgPathOption = trumbowyg.svgPath != null ? trumbowyg.svgPath : options.svgPath;
         t.hasSvg = svgPathOption !== false;
-        t.svgPath = !!t.doc.querySelector('base') ? window.location.href.split('#')[0] : '';
-        if ($('#' + trumbowygIconsId, t.doc).length === 0 && svgPathOption !== false) {
+        t.svgPath = !t.doc.querySelector('base') ? window.location.href.split('#')[0] : '';
+        if (!t.doc.querySelector('#' + trumbowygIconsId) && svgPathOption !== false) {
             if (svgPathOption == null) {
                 // Hack to get svgPathOption based on trumbowyg.js path
                 var scriptElements = document.getElementsByTagName('script');
                 for (var i = 0; i < scriptElements.length; i += 1) {
                     var source = scriptElements[i].src;
-                    var matches = source.match('trumbowyg(\.min)?\.js');
+                    var matches = source.match('trumbowyg(.min)?.js');
                     if (matches != null) {
                         svgPathOption = source.substring(0, source.indexOf(matches[0])) + 'ui/icons.svg';
                     }
@@ -233,19 +283,14 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
             var div = t.doc.createElement('div');
             div.id = trumbowygIconsId;
             t.doc.body.insertBefore(div, t.doc.body.childNodes[0]);
-            $.ajax({
-                async: true,
-                type: 'GET',
-                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
-                dataType: 'xml',
-                crossDomain: true,
-                url: svgPathOption,
-                data: null,
-                beforeSend: null,
-                complete: null,
-                success: function (data) {
-                    div.innerHTML = new XMLSerializer().serializeToString(data.documentElement);
+            fetch(svgPathOption, {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;  charset=utf-8'
                 }
+            }).then(function (resp) {
+                return resp.text();
+            }).then(function (data) {
+                div.innerHTML = data;
             });
         }
 
@@ -396,9 +441,11 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
         };
 
         // Defaults Options
-        t.o = $.extend(true, {}, $trumbowyg.defaultOptions, options);
+        t.o = Object.create(trumbowyg.defaultOptions);
+        Object.assign(t.o, options);
+
         if (!t.o.hasOwnProperty('imgDblClickHandler')) {
-            t.o.imgDblClickHandler = t.getDefaultImgDblClickHandler();
+            t.o.imgDblClickHandler = t.getDefaultImgDblClickHandler;
         }
 
         t.urlPrefix = t.setupUrlPrefix();
@@ -411,9 +458,9 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
             t.o.btns[3] = ['bold', 'italic', 'underline', 'strikethrough'];
         }
 
-        $.each(t.o.btnsDef, function (btnName, btnDef) {
+        for (const [btnName, btnDef] of Object.entries(t.o.btnsDef)) {
             t.addBtnDef(btnName, btnDef);
-        });
+        }
 
         // put this here in the event it would be merged in with options
         t.eventNamespace = 'trumbowyg-event';
@@ -445,7 +492,7 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
 
         init: function () {
             var t = this;
-            t.height = t.$ta.height();
+            t.height = t.$ta.clientHeight;
 
             t.initPlugins();
 
@@ -454,6 +501,7 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
                 t.doc.execCommand('enableObjectResizing', false, false);
                 t.doc.execCommand('defaultParagraphSeparator', false, 'p');
             } catch (e) {
+                console.error(e);
             }
 
             t.buildEditor();
@@ -467,7 +515,8 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
                 if (t.disabled) {
                     t.setDisabled(true);
                 }
-                t.$c.trigger('tbwinit');
+                var tbwinitev = new CustomEvent('tbwinit');
+                t.$c.dispatchEvent(tbwinitev);
             });
         },
 
@@ -492,74 +541,67 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
                 prefix = t.o.prefix,
                 html = '';
 
-            t.$box = $('<div/>', {
-                class: prefix + 'box ' + prefix + 'editor-visible ' + prefix + t.o.lang + ' trumbowyg'
-            });
+            t.$box = t.doc.createElement('div');
+            t.$box.className = prefix + 'box ' + prefix + 'editor-visible ' + prefix + t.o.lang + ' trumbowyg';
 
             // $ta = Textarea
             // $ed = Editor
-            t.isTextarea = t.$ta.is('textarea');
+            t.isTextarea = t.$ta.nodeName.toLowerCase() === 'textarea';
             if (t.isTextarea) {
-                html = t.$ta.val();
-                t.$ed = $('<div/>');
-                t.$box
-                    .insertAfter(t.$ta)
-                    .append(t.$ed, t.$ta);
+                html = t.$ta.value;
+                t.$ed = t.doc.createElement('div');
+                t.$box.appendChild(t.$ed);
+                t.$ta.insertAdjacentElement('afterend', t.$box);
+                t.$box.appendChild(t.$ta);
             } else {
                 t.$ed = t.$ta;
-                html = t.$ed.html();
+                html = t.$ed.innerHTML;
 
-                t.$ta = $('<textarea/>', {
-                    name: t.$ta.attr('id'),
-                    height: t.height
-                }).val(html);
-
-                t.$box
-                    .insertAfter(t.$ed)
-                    .append(t.$ta, t.$ed);
+                t.$ta = t.doc.createElement('textarea');
+                t.$ta.name = t.$ta.id;
+                t.$ta.style.height =  t.height;
+                t.$ta.value = html;
+                
+                t.$box.appendChild(t.$ta);
+                t.$ed.insertAdjacentElement('afterend', t.$box);
+                t.$box.appendChild(t.$ed);
+                
                 t.syncCode();
             }
 
-            t.$ta
-                .addClass(prefix + 'textarea')
-                .attr('tabindex', -1)
-            ;
+            t.$ta.classList.add(prefix + 'textarea');
+            t.$ta.setAttribute('tabindex', -1);
 
-            t.$ed
-                .addClass(prefix + 'editor')
-                .attr({
-                    contenteditable: true,
-                    dir: t.lang._dir || 'ltr'
-                })
-                .html(html)
-            ;
+            t.$ed.classList.add(prefix + 'editor');
+            t.$ed.contentEditable = true;
+            t.$ed.setAttribute('dir', t.lang._dir || 'ltr');
+            t.$ed.innerHTML = html;
 
             if (t.o.tabindex) {
-                t.$ed.attr('tabindex', t.o.tabindex);
+                t.$ed.setAttribut('tabindex', t.o.tabindex);
             }
 
-            if (t.$c.is('[placeholder]')) {
-                t.$ed.attr('placeholder', t.$c.attr('placeholder'));
+            if (t.$c.hasAttribute('placeholder')) {
+                t.$ed.setAttribute('placeholder', t.$c.getAttribute('placeholder'));
             }
 
-            if (t.$c.is('[spellcheck]')) {
-                t.$ed.attr('spellcheck', t.$c.attr('spellcheck'));
+            if (t.$c.hasAttribute('spellcheck')) {
+                t.$ed.setAttribute('spellcheck', t.$c.getAttribute('spellcheck'));
             }
 
             if (t.o.resetCss) {
-                t.$ed.addClass(prefix + 'reset-css');
+                t.$ed.classList.add(prefix + 'reset-css');
             }
 
             if (!t.o.autogrow) {
-                t.$ta.add(t.$ed).css({
-                    height: t.height
-                });
+                t.$ta.style.height = t.height;
+                t.$ed.style.height = t.height;
             }
 
             t.semanticCode();
 
             if (t.o.autogrowOnEnter) {
-                t.$ed.addClass(prefix + 'autogrow-on-enter');
+                t.$ed.classList.add(prefix + 'autogrow-on-enter');
             }
 
             var ctrl = false,
@@ -567,135 +609,156 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
                 debounceButtonPaneStatus,
                 updateEventName = 'keyup';
 
-            t.$ed
-                .on('dblclick', 'img', t.o.imgDblClickHandler)
-                .on('keydown', function (e) {
-                    if ((e.ctrlKey || e.metaKey) && !e.altKey) {
-                        ctrl = true;
-                        var key = t.keys[String.fromCharCode(e.which).toUpperCase()];
-
-                        try {
-                            t.execCmd(key.fn, key.param);
-                            return false;
-                        } catch (c) {
-                        }
-                    }
-                })
-                .on('compositionstart compositionupdate', function () {
-                    composition = true;
-                })
-                .on(updateEventName + ' compositionend', function (e) {
-                    if (e.type === 'compositionend') {
-                        composition = false;
-                    } else if (composition) {
-                        return;
-                    }
-
-                    var keyCode = e.which;
-
-                    if (keyCode >= 37 && keyCode <= 40) {
-                        return;
-                    }
-
-                    if ((e.ctrlKey || e.metaKey) && (keyCode === 89 || keyCode === 90)) {
-                        t.$c.trigger('tbwchange');
-                    } else if (!ctrl && keyCode !== 17) {
-                        var compositionEndIE = t.isIE ? e.type === 'compositionend' : true;
-                        t.semanticCode(false, compositionEndIE && keyCode === 13);
-                        t.$c.trigger('tbwchange');
-                    } else if (typeof e.which === 'undefined') {
-                        t.semanticCode(false, false, true);
-                    }
-
-                    setTimeout(function () {
+            t.$ed.addEventListener('dblclick', t.o.imgDblClickHandler);
+            
+            function ctrlTimeoutHandler(e) {
+                if ((!e.ctrlKey && !e.metaKey) || e.altKey) {
+                    setTimeout(function () { // "hold on" to the ctrl key for 50ms
                         ctrl = false;
                     }, 50);
-                })
-                .on('mouseup keydown keyup', function (e) {
-                    if ((!e.ctrlKey && !e.metaKey) || e.altKey) {
-                        setTimeout(function () { // "hold on" to the ctrl key for 50ms
-                            ctrl = false;
-                        }, 50);
-                    }
-                    clearTimeout(debounceButtonPaneStatus);
-                    debounceButtonPaneStatus = setTimeout(function () {
-                        t.updateButtonPaneStatus();
-                    }, 50);
-                })
-                .on('focus blur', function (e) {
-                    t.$c.trigger('tbw' + e.type);
-                    if (e.type === 'blur') {
-                        $('.' + prefix + 'active-button', t.$btnPane).removeClass(prefix + 'active-button ' + prefix + 'active');
-                    }
-                    if (t.o.autogrowOnEnter) {
-                        if (t.autogrowOnEnterDontClose) {
-                            return;
-                        }
-                        if (e.type === 'focus') {
-                            t.autogrowOnEnterWasFocused = true;
-                            t.autogrowEditorOnEnter();
-                        }
-                        else if (!t.o.autogrow) {
-                            t.$ed.css({height: t.$ed.css('min-height')});
-                            t.$c.trigger('tbwresize');
-                        }
-                    }
-                })
-                .on('cut', function () {
-                    setTimeout(function () {
-                        t.semanticCode(false, true);
-                        t.$c.trigger('tbwchange');
-                    }, 0);
-                })
-                .on('paste', function (e) {
-                    if (t.o.removeformatPasted) {
-                        e.preventDefault();
+                }
+                clearTimeout(debounceButtonPaneStatus);
+                debounceButtonPaneStatus = setTimeout(function () {
+                    t.updateButtonPaneStatus();
+                });
+            }
+            t.$ed.addEventListener('keydown', function (e) {
+                if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+                    ctrl = true;
+                    var key = t.keys[String.fromCharCode(e.which).toUpperCase()];
 
-                        if (window.getSelection && window.getSelection().deleteFromDocument) {
-                            window.getSelection().deleteFromDocument();
-                        }
+                    try {
+                        t.execCmd(key.fn, key.param);
+                        return false;
+                    } catch (c) {
+                        console.error(c);
+                    }
+                }
+                
+                ctrlTimeoutHandler(e);
+            });
+            
+            t.$ed.addEventListener('compositionstart', function () {
+                composition = true;
+            });
+            t.$ed.addEventListener('compositionupdate', function () {
+                composition = true;
+            });
+            
+            function composeEndHandler(e) {
+                if (e.type === 'compositionend') {
+                    composition = false;
+                } else if (composition) {
+                    return;
+                }
+
+                var keyCode = e.which;
+
+                if (keyCode >= 37 && keyCode <= 40) {
+                    return;
+                }
+
+                if ((e.ctrlKey || e.metaKey) && (keyCode === 89 || keyCode === 90)) {
+                    t.$c.dispatchEvent(new CustomEvent('tbwchange'));
+                } else if (!ctrl && keyCode !== 17) {
+                    var compositionEndIE = t.isIE ? e.type === 'compositionend' : true;
+                    t.semanticCode(false, compositionEndIE && keyCode === 13);
+                    var tbwchangeev = new CustomEvent('tbwchange');
+                    t.$c.dispatchEvent(tbwchangeev);
+                } else if (typeof e.which === 'undefined') {
+                    t.semanticCode(false, false, true);
+                }
+
+                setTimeout(function () {
+                    ctrl = false;
+                }, 50);
+            }
+            t.$ed.addEventListener(updateEventName, composeEndHandler);
+            t.$ed.addEventListener('compositionend', composeEndHandler);
+            
+            t.$ed.addEventListener('mouseup', ctrlTimeoutHandler);
+            t.$ed.addEventListener('keyup', ctrlTimeoutHandler);
+
+            function focusblur(e) {
+                t.$c.dispatchEvent(new CustomEvent('tbw' + e.type));
+                if (e.type === 'blur') {
+                    let activebutton = t.doc.querySelector('.' + prefix + 'active-button', t.$btnPane);
+                    if (activebutton) {
+                        activebutton.classList(prefix + 'active-button ' + prefix + 'active');
+                    }
+                }
+                if (t.o.autogrowOnEnter) {
+                    if (t.autogrowOnEnterDontClose) {
+                        return;
+                    }
+                    if (e.type === 'focus') {
+                        t.autogrowOnEnterWasFocused = true;
+                        t.autogrowEditorOnEnter();
+                    }
+                    else if (!t.o.autogrow) {
+                        t.$ed.css({height: t.$ed.css('min-height')});
+                        t.$c.dispatchEvent(new CustomEvent('tbwresize'));
+                    }
+                }
+            }
+            t.$ed.addEventListener('focus', focusblur);
+            t.$ed.addEventListener('blur', focusblur);
+
+            t.$ed.addEventListener('cut', function () {
+                setTimeout(function () {
+                    t.semanticCode(false, true);
+                    t.$c.dispatchEvent(new CustomEvent('tbwchange'));
+                }, 0);
+            });
+            
+            t.$ed.addEventListener('paste', function (e) {
+                if (t.o.removeformatPasted) {
+                    e.preventDefault();
+
+                    if (window.getSelection && window.getSelection().deleteFromDocument) {
+                        window.getSelection().deleteFromDocument();
+                    }
+
+                    try {
+                        // IE
+                        var text = window.clipboardData.getData('Text');
 
                         try {
-                            // IE
-                            var text = window.clipboardData.getData('Text');
-
-                            try {
-                                // <= IE10
-                                t.doc.selection.createRange().pasteHTML(text);
-                            } catch (c) {
-                                // IE 11
-                                t.doc.getSelection().getRangeAt(0).insertNode(t.doc.createTextNode(text));
-                            }
-                            t.$c.trigger('tbwchange', e);
-                        } catch (d) {
-                            // Not IE
-                            t.execCmd('insertText', (e.originalEvent || e).clipboardData.getData('text/plain'));
+                            // <= IE10
+                            t.doc.selection.createRange().pasteHTML(text);
+                        } catch (c) {
+                            // IE 11
+                            t.doc.getSelection().getRangeAt(0).insertNode(t.doc.createTextNode(text));
                         }
+                        t.$c.dispatchEvent(new CustomEvent('tbwchange', e));
+                    } catch (d) {
+                        // Not IE
+                        t.execCmd('insertText', (e.originalEvent || e).clipboardData.getData('text/plain'));
                     }
+                }
 
-                    // Call pasteHandlers
-                    $.each(t.pasteHandlers, function (i, pasteHandler) {
-                        pasteHandler(e);
-                    });
+                // Call pasteHandlers
+                for (let pasteHandler of t.pasteHandlers) {
+                    pasteHandler(e);
+                }
 
-                    setTimeout(function () {
-                        t.semanticCode(false, true);
-                        t.$c.trigger('tbwpaste', e);
-                    }, 0);
-                });
+                setTimeout(function () {
+                    t.semanticCode(false, true);
+                    t.$c.dispatchEvent(new CustomEvent('tbwpaste', e));
+                }, 0);
+            });
 
-            t.$ta
-                .on('keyup', function () {
-                    t.$c.trigger('tbwchange');
-                })
-                .on('paste', function () {
-                    setTimeout(function () {
-                        t.$c.trigger('tbwchange');
-                    }, 0);
-                });
+            t.$ta.addEventListener('keyup', function () {
+                t.$c.dispatchEvent(new CustomEvent('tbwchange'));
+            });
+            t.$ta.addEventListener('paste', function () {
+                setTimeout(function () {
+                    t.$c.dispatchEvent(new CustomEvent('tbwchange'));
+                }, 0);
+            });
 
-            t.$box.on('keydown', function (e) {
-                if (e.which === 27 && $('.' + prefix + 'modal-box', t.$box).length === 1) {
+            t.$box.addEventListener('keydown', function (e) {
+                if (e.which === 27 && t.doc.querySelector('.' + prefix + 'modal-box', t.$box)) {
                     t.closeModal();
                     return false;
                 }
@@ -705,16 +768,17 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
         //autogrow when entering logic
         autogrowEditorOnEnter: function () {
             var t = this;
-            t.$ed.removeClass('autogrow-on-enter');
+            t.$ed.classList.remove('autogrow-on-enter');
             var oldHeight = t.$ed[0].clientHeight;
-            t.$ed.height('auto');
+            t.$ed.style.height = 'auto';
             var totalHeight = t.$ed[0].scrollHeight;
-            t.$ed.addClass('autogrow-on-enter');
+            t.$ed.classList.add('autogrow-on-enter');
             if (oldHeight !== totalHeight) {
-                t.$ed.height(oldHeight);
+                t.$ed.style.height = oldHeight;
                 setTimeout(function () {
-                    t.$ed.css({height: totalHeight});
-                    t.$c.trigger('tbwresize');
+                    t.$ed.style.height = totalHeight;
+                    var tbwresizeev = new CustomEvent('tbwresize');
+                    t.$c.dispatchEvent(tbwresizeev);
                 }, 0);
             }
         },
@@ -725,33 +789,35 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
             var t = this,
                 prefix = t.o.prefix;
 
-            var $btnPane = t.$btnPane = $('<div/>', {
-                class: prefix + 'button-pane'
-            });
+            var $btnPane = t.doc.createElement('div');
+            $btnPane.className = prefix + 'button-pane';
+            
+            t.$btnPane = $btnPane;
 
-            $.each(t.o.btns, function (i, btnGrp) {
-                if (!$.isArray(btnGrp)) {
+            for (var btnGrp of t.o.btns) {
+                if (!Array.isArray(btnGrp)) {
                     btnGrp = [btnGrp];
                 }
 
-                var $btnGroup = $('<div/>', {
-                    class: prefix + 'button-group ' + ((btnGrp.indexOf('fullscreen') >= 0) ? prefix + 'right' : '')
-                });
-                $.each(btnGrp, function (i, btn) {
+                var $btnGroup = t.doc.createElement('div');
+                $btnGroup.className = prefix + 'button-group ' + ((btnGrp.indexOf('fullscreen') >= 0) ? prefix + 'right' : '');
+
+                for (var btn of btnGrp) {
                     try { // Prevent buildBtn error
                         if (t.isSupportedBtn(btn)) { // It's a supported button
-                            $btnGroup.append(t.buildBtn(btn));
+                            $btnGroup.appendChild(t.buildBtn(btn));
                         }
                     } catch (c) {
+                        console.error(c);
                     }
-                });
-
-                if ($btnGroup.html().trim().length > 0) {
-                    $btnPane.append($btnGroup);
                 }
-            });
 
-            t.$box.prepend($btnPane);
+                if ($btnGroup.innerHTML.trim().length > 0) {
+                    $btnPane.appendChild($btnGroup);
+                }
+            }
+
+            t.$box.insertBefore($btnPane, t.$box.childNodes[0]);
         },
 
 
@@ -762,47 +828,53 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
                 btn = t.btnsDef[btnName],
                 isDropdown = btn.dropdown,
                 hasIcon = btn.hasIcon != null ? btn.hasIcon : true,
-                textDef = t.lang[btnName] || btnName,
+                textDef = t.lang[btnName] || btnName;
 
-                $btn = $('<button/>', {
-                    type: 'button',
-                    class: prefix + btnName + '-button ' + (btn.class || '') + (!hasIcon ? ' ' + prefix + 'textual-button' : ''),
-                    html: t.hasSvg && hasIcon ?
-                        '<svg><use xlink:href="' + t.svgPath + '#' + prefix + (btn.ico || btnName).replace(/([A-Z]+)/g, '-$1').toLowerCase() + '"/></svg>' :
-                        t.hideButtonTexts ? '' : (btn.text || btn.title || t.lang[btnName] || btnName),
-                    title: (btn.title || btn.text || textDef) + ((btn.key) ? ' (Ctrl + ' + btn.key + ')' : ''),
-                    tabindex: -1,
-                    mousedown: function () {
-                        if (!isDropdown || $('.' + btnName + '-' + prefix + 'dropdown', t.$box).is(':hidden')) {
-                            $('body', t.doc).trigger('mousedown');
-                        }
+            var $btn = t.doc.createElement('button');
+            $btn.setAttribute('type', 'button');
+            $btn.className = prefix + btnName + '-button ' + (btn.class || '') + (!hasIcon ? ' ' + prefix + 'textual-button' : '');
+            $btn.innerHTML = t.hasSvg && hasIcon ?
+                '<svg><use xlink:href="' + t.svgPath + '#' + prefix + (btn.ico || btnName).replace(/([A-Z]+)/g, '-$1').toLowerCase() + '"/></svg>' :
+                t.hideButtonTexts ? '' : (btn.text || btn.title || t.lang[btnName] || btnName);
+            $btn.setAttribute('title', (btn.title || btn.text || textDef) + ((btn.key) ? ' (Ctrl + ' + btn.key + ')' : ''));
+            $btn.setAttribute('tabindex', -1);
+            $btn.addEventListener('mousedown', function (ev) {
+                let dropdownButton = t.doc.querySelector('.' + btnName + '-' + prefix + 'dropdown', t.$box);
+                if (!isDropdown || dropdownButton && dropdownButton.getAttribute('hidden')) {
+                    var mousedownev = new CustomEvent('mousedown');
+                    t.doc.body.dispatchEvent(mousedownev);
+                }
 
-                        if ((t.$btnPane.hasClass(prefix + 'disable') || t.$box.hasClass(prefix + 'disabled')) &&
-                            !$(this).hasClass(prefix + 'active') &&
-                            !$(this).hasClass(prefix + 'not-disable')) {
-                            return false;
-                        }
+                if ((t.$btnPane.classList.contains(prefix + 'disable') || t.$box.classList.contains(prefix + 'disabled')) &&
+                    !ev.target.classList.contains(prefix + 'active') &&
+                    !ev.target.classList.contains(prefix + 'not-disable')) {
+                    return false;
+                }
 
-                        t.execCmd((isDropdown ? 'dropdown' : false) || btn.fn || btnName, btn.param || btnName, btn.forceCss);
+                t.execCmd((isDropdown ? 'dropdown' : false) || btn.fn || btnName, btn.param || btnName, btn.forceCss);
 
-                        return false;
-                    }
-                });
+                return false;
+            });
 
             if (isDropdown) {
-                $btn.addClass(prefix + 'open-dropdown');
-                var dropdownPrefix = prefix + 'dropdown',
-                    dropdownOptions = { // the dropdown
-                        class: dropdownPrefix + '-' + btnName + ' ' + dropdownPrefix + ' ' + prefix + 'fixed-top'
-                    };
+                $btn.classList.add(prefix + 'open-dropdown');
+                var dropdownPrefix = prefix + 'dropdown';
+                var dropdownOptions = { // the dropdown
+                    class: dropdownPrefix + '-' + btnName + ' ' + dropdownPrefix + ' ' + prefix + 'fixed-top'
+                };
                 dropdownOptions['data-' + dropdownPrefix] = btnName;
-                var $dropdown = $('<div/>', dropdownOptions);
-                $.each(isDropdown, function (i, def) {
+                var $dropdown = t.doc.createElement('div');
+                $dropdown.className = dropdownPrefix + '-' + btnName + ' ' + dropdownPrefix + ' ' + prefix + 'fixed-top';
+
+                for (let def of isDropdown) {
                     if (t.btnsDef[def] && t.isSupportedBtn(def)) {
-                        $dropdown.append(t.buildSubBtn(def));
+                        $dropdown.appendChild(t.buildSubBtn(def));
                     }
-                });
-                t.$box.append($dropdown.hide());
+                }
+                
+                $dropdown.style.display = 'none';
+                
+                t.$box.appendChild($dropdown);
             } else if (btn.key) {
                 t.keys[btn.key] = {
                     fn: btn.fn || btnName,
@@ -833,105 +905,114 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
 
             t.tagToButton[(btn.tag || btnName).toLowerCase()] = btnName;
 
-            return $('<button/>', {
-                type: 'button',
-                class: prefix + btnName + '-dropdown-button' + (btn.ico ? ' ' + prefix + btn.ico + '-button' : ''),
-                html: t.hasSvg && hasIcon ? '<svg><use xlink:href="' + t.svgPath + '#' + prefix + (btn.ico || btnName).replace(/([A-Z]+)/g, '-$1').toLowerCase() + '"/></svg>' + (btn.text || btn.title || t.lang[btnName] || btnName) : (btn.text || btn.title || t.lang[btnName] || btnName),
-                title: ((btn.key) ? ' (Ctrl + ' + btn.key + ')' : null),
-                style: btn.style || null,
-                mousedown: function () {
-                    $('body', t.doc).trigger('mousedown');
+            var subbutton = t.doc.createElement('button');
+            subbutton.setAttribute('type', 'button');
+            subbutton.className = prefix + btnName + '-dropdown-button' + (btn.ico ? ' ' + prefix + btn.ico + '-button' : '');
+            subbutton.innerHTML = 
+                t.hasSvg && hasIcon ? '<svg><use xlink:href="' + t.svgPath + '#' + prefix + 
+                (btn.ico || btnName).replace(/([A-Z]+)/g, '-$1').toLowerCase() + '"/></svg>' + 
+                (btn.text || btn.title || t.lang[btnName] || btnName) : (btn.text || btn.title || t.lang[btnName] || btnName);
+            subbutton.setAttribute('title', ((btn.key) ? ' (Ctrl + ' + btn.key + ')' : null));
+            subbutton.style = btn.style || null;
+            subbutton.addEventListener('mousedown', function () {
+                var mousedownev = new CustomEvent('mousedown');
+                t.doc.body.dispatchEvent(mousedownev);
 
-                    t.execCmd(btn.fn || btnName, btn.param || btnName, btn.forceCss);
+                t.execCmd(btn.fn || btnName, btn.param || btnName, btn.forceCss);
 
-                    return false;
-                }
+                return false;
             });
+            
+            return subbutton;
         },
         // Check if button is supported
-        isSupportedBtn: function (b) {
-            try {
-                return this.btnsDef[b].isSupported();
+        isSupportedBtn: function () {
+            /*try {
+                return this.btnsDef[b].isSupported;
             } catch (c) {
-            }
+                console.error(c);
+            }*/
             return true;
         },
 
         // Build overlay for modal box
         buildOverlay: function () {
             var t = this;
-            t.$overlay = $('<div/>', {
-                class: t.o.prefix + 'overlay'
-            }).appendTo(t.$box);
+            t.$overlay = t.doc.createElement('div');
+            t.$overlay.className = t.o.prefix + 'overlay';
+            t.$box.appendChild(t.$overlay);
+
             return t.$overlay;
         },
         showOverlay: function () {
             var t = this;
-            $(window).trigger('scroll');
-            t.$overlay.fadeIn(200);
-            t.$box.addClass(t.o.prefix + 'box-blur');
+            var scrollev = new CustomEvent('scroll');
+            window.dispatchEvent(scrollev);
+            t.$overlay.style.display = 'block';
+            t.$box.classList.add(t.o.prefix + 'box-blur');
         },
         hideOverlay: function () {
             var t = this;
-            t.$overlay.fadeOut(50);
-            t.$box.removeClass(t.o.prefix + 'box-blur');
+            t.$overlay.style.display = 'none';
+            t.$box.classList.remove(t.o.prefix + 'box-blur');
+        },
+ 
+        windowScrollHandler: function () {
+            var t = this,
+                fixedFullWidth = t.o.fixedFullWidth,
+                $box = t.$box;
+            
+            if (!$box) {
+                return;
+            }
+
+            t.syncCode();
+
+            var scrollTop = window.scrollTop(),
+                offset = $box.offset().top + 1,
+                bp = t.$btnPane,
+                oh = bp.offsetHeight - 2;
+            var findtoprefix = $box.querySelector('.' + t.o.prefix + 'fixed-top');
+
+            if ((scrollTop - offset > 0) && ((scrollTop - offset - t.height) < 0)) {
+                if (!t.isFixed) {
+                    t.isFixed = true;
+                    bp.style.position = 'fixed';
+                    bp.style.top = 0;
+                    bp.style.left = fixedFullWidth ? '0' : 'auto';
+                    bp.style.zIndex = 7;
+        
+                    t.$ta.style.marginTop = bp.clientHeight;
+                    t.$ed.style.marginTop = bp.clientHeight;
+                }
+                bp.style.width = fixedFullWidth ? '100%' : (($box.width() - 1) + 'px');
+
+                findtoprefix.style.position = fixedFullWidth ? 'fixed' : 'absolute';
+                findtoprefix.style.top = fixedFullWidth ? oh : oh + (scrollTop - offset) + 'px';
+                findtoprefix.style.zIndex = 15;
+            } else if (t.isFixed) {
+                t.isFixed = false;
+                bp.removeAttribute('style');
+                t.$ta.style.marginTop = 0;
+                t.$ed.style.marginTop = 0;
+
+                findtoprefix.style.position = 'absolute';
+                findtoprefix.style.top = oh;
+            }
         },
 
         // Management of fixed button pane
         fixedBtnPaneEvents: function () {
-            var t = this,
-                fixedFullWidth = t.o.fixedFullWidth,
-                $box = t.$box;
+            var t = this;
 
             if (!t.o.fixedBtnPane) {
                 return;
             }
 
             t.isFixed = false;
-
-            $(window)
-                .on('scroll.' + t.eventNamespace + ' resize.' + t.eventNamespace, function () {
-                    if (!$box) {
-                        return;
-                    }
-
-                    t.syncCode();
-
-                    var scrollTop = $(window).scrollTop(),
-                        offset = $box.offset().top + 1,
-                        bp = t.$btnPane,
-                        oh = bp.outerHeight() - 2;
-
-                    if ((scrollTop - offset > 0) && ((scrollTop - offset - t.height) < 0)) {
-                        if (!t.isFixed) {
-                            t.isFixed = true;
-                            bp.css({
-                                position: 'fixed',
-                                top: 0,
-                                left: fixedFullWidth ? '0' : 'auto',
-                                zIndex: 7
-                            });
-                            $([t.$ta, t.$ed]).css({marginTop: bp.height()});
-                        }
-                        bp.css({
-                            width: fixedFullWidth ? '100%' : (($box.width() - 1) + 'px')
-                        });
-
-                        $('.' + t.o.prefix + 'fixed-top', $box).css({
-                            position: fixedFullWidth ? 'fixed' : 'absolute',
-                            top: fixedFullWidth ? oh : oh + (scrollTop - offset) + 'px',
-                            zIndex: 15
-                        });
-                    } else if (t.isFixed) {
-                        t.isFixed = false;
-                        bp.removeAttr('style');
-                        $([t.$ta, t.$ed]).css({marginTop: 0});
-                        $('.' + t.o.prefix + 'fixed-top', $box).css({
-                            position: 'absolute',
-                            top: oh
-                        });
-                    }
-                });
+            
+            window.addEventListener('scroll.' + t.eventNamespace, t.windowScrollHandler);
+            window.addEventListener('resize.' + t.eventNamespace, t.windowScrollHandler);
         },
 
         // Disable editor
@@ -942,12 +1023,12 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
             t.disabled = disable;
 
             if (disable) {
-                t.$ta.attr('disabled', true);
+                t.$ta.setAttribute('disabled', 'disabled');
             } else {
-                t.$ta.removeAttr('disabled');
+                t.$ta.removeAttribute('disabled');
             }
-            t.$box.toggleClass(prefix + 'disabled', disable);
-            t.$ed.attr('contenteditable', !disable);
+            t.$box.classList.toggle(prefix + 'disabled', disable);
+            t.$ed.contentEditable = !disable;
         },
 
         // Destroy the editor
@@ -956,40 +1037,39 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
                 prefix = t.o.prefix;
 
             if (t.isTextarea) {
-                t.$box.after(
-                    t.$ta
-                        .css({height: ''})
-                        .val(t.html())
-                        .removeClass(prefix + 'textarea')
-                        .show()
-                );
+                t.$ta.height = '';
+                t.$ta.value = '';
+                t.$ta.classList.remove(prefix + 'textarea');
+                t.$ta.style.display = 'block';
+                t.$box.parentNode.insertBefore(t.$ta, t.$box.nextSibling);
             } else {
-                t.$box.after(
-                    t.$ed
-                        .css({height: ''})
-                        .removeClass(prefix + 'editor')
-                        .removeAttr('contenteditable')
-                        .removeAttr('dir')
-                        .html(t.html())
-                        .show()
-                );
+                t.$ed.height = '';
+                t.$ed.classList.remove(prefix + 'editor');
+                t.$ed.contentEditable = false;
+                t.$ed.removeAttribute('dir');
+                t.$ed.innerHTML = t.html();
+                t.$ed.style.display = 'block';
+                t.$box.parentNode.insertBefore(t.$ed, t.$box.nextSibling);
             }
 
-            t.$ed.off('dblclick', 'img');
+            t.$ed.removeEventListener('dblclick', t.o.imgDblClickHandler);
 
             t.destroyPlugins();
 
             t.$box.remove();
-            t.$c.removeData('trumbowyg');
-            $('body').removeClass(prefix + 'body-fullscreen');
-            t.$c.trigger('tbwclose');
-            $(window).off('scroll.' + t.eventNamespace + ' resize.' + t.eventNamespace);
+            delete t.$c.dataset.trumbowyg;
+            document.body.classList.remove(prefix + 'body-fullscreen');
+            var tbwcloseev = new CustomEvent('tbwclose');
+            t.$c.dispatchEvent(tbwcloseev);
+            
+            window.removeEventListener('scroll.' + t.eventNamespace, t.windowScrollHandler);
+            window.removeEventListener('resize.' + t.eventNamespace, t.windowScrollHandler);
         },
 
 
         // Empty the editor
         empty: function () {
-            this.$ta.val('');
+            this.$ta.value = '';
             this.syncCode(true);
         },
 
@@ -1000,20 +1080,23 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
                 prefix = t.o.prefix;
 
             if (t.o.autogrowOnEnter) {
-                t.autogrowOnEnterDontClose = !t.$box.hasClass(prefix + 'editor-hidden');
+                t.autogrowOnEnterDontClose = !t.$box.classList.contains(prefix + 'editor-hidden');
             }
 
             t.semanticCode(false, true);
 
             setTimeout(function () {
                 t.doc.activeElement.blur();
-                t.$box.toggleClass(prefix + 'editor-hidden ' + prefix + 'editor-visible');
-                t.$btnPane.toggleClass(prefix + 'disable');
-                $('.' + prefix + 'viewHTML-button', t.$btnPane).toggleClass(prefix + 'active');
+                t.$box.classList.toggle(prefix + 'editor-hidden ' + prefix + 'editor-visible');
+                t.$btnPane.classList.toggle(prefix + 'disable');
+                let htmlbtn = t.doc.querySelector('.' + prefix + 'viewHTML-button', t.$btnPane);
+                if (htmlbtn) {
+                    htmlbtn.classList.toggle(prefix + 'active');
+                }
                 if (t.$box.hasClass(prefix + 'editor-visible')) {
-                    t.$ta.attr('tabindex', -1);
+                    t.$ta.setAttribute('tabindex', -1);
                 } else {
-                    t.$ta.removeAttr('tabindex');
+                    t.$ta.removeAttribute('tabindex');
                 }
 
                 if (t.o.autogrowOnEnter && !t.autogrowOnEnterDontClose) {
@@ -1027,31 +1110,40 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
             var t = this,
                 d = t.doc,
                 prefix = t.o.prefix,
-                $dropdown = $('[data-' + prefix + 'dropdown=' + name + ']', t.$box),
-                $btn = $('.' + prefix + name + '-button', t.$btnPane),
-                show = $dropdown.is(':hidden');
+                $dropdown = t.$box.querySelector('[data-' + prefix + 'dropdown=' + name + ']'),
+                $btn = t.$btnPane.querySelector('.' + prefix + name + '-button'),
+                show = $dropdown.getAttribute('hidden') === 'hidden';
 
-            $('body', d).trigger('mousedown');
+            var mousedowneev = new CustomEvent('mousedown');
+            d.body.dispatchEvent(mousedowneev);
 
             if (show) {
-                var o = $btn.offset().left;
+                var o = $btn.offsetLeft;
                 $btn.addClass(prefix + 'active');
 
-                $dropdown.css({
-                    position: 'absolute',
-                    top: $btn.offset().top - t.$btnPane.offset().top + $btn.outerHeight(),
-                    left: (t.o.fixedFullWidth && t.isFixed) ? o + 'px' : (o - t.$btnPane.offset().left) + 'px'
-                }).show();
+                $dropdown.style.position = 'absolute';
+                $dropdown.style.top = $btn.offsetTop - t.$btnPane.offsetTop + $btn.offsetHeight;
+                $dropdown.style.left = (t.o.fixedFullWidth && t.isFixed) ? o + 'px' : (o - t.$btnPane.offsetLeft) + 'px';
+                $dropdown.style.display = 'block';
 
-                $(window).trigger('scroll');
-
-                $('body', d).on('mousedown.' + t.eventNamespace, function (e) {
-                    if (!$dropdown.is(e.target)) {
-                        $('.' + prefix + 'dropdown', t.$box).hide();
-                        $('.' + prefix + 'active', t.$btnPane).removeClass(prefix + 'active');
-                        $('body', d).off('mousedown.' + t.eventNamespace);
+                var scrollev = new CustomEvent('scroll');
+                window.dispatchEvent('scroll');
+                
+                var dropdownTargetHandler = function(e) {
+                    if (!$dropdown === e.target) {
+                        let dropdown = t.$box.querySelector('.' + prefix + 'dropdown');
+                        if (dropdown) {
+                            t.$box.querySelector('.' + prefix + 'dropdown').display = 'none';
+                        }
+                        let activePaneButton = t.$btnPane.querySelector('.' + prefix + 'active', t.$btnPane);
+                        if (activePaneButton) {
+                            activePaneButton.classList.remove(prefix + 'active');
+                        }
+                        d.body.removeEventListener('mousedown.' + t.eventNamespace, scrollev);
                     }
-                });
+                };
+
+                d.body.addEventListener('mousedown.' + t.eventNamespace, dropdownTargetHandler);
             }
         },
 
@@ -1061,45 +1153,56 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
             var t = this;
 
             if (html != null) {
-                t.$ta.val(html);
+                t.$ta.value = html;
                 t.syncCode(true);
-                t.$c.trigger('tbwchange');
+                var tbwchangeev = new CustomEvent('tbwchange');
+                t.$c.dispatchEvent(tbwchangeev);
                 return t;
             }
 
-            return t.$ta.val();
+            return t.$ta.value;
         },
         syncTextarea: function () {
             var t = this;
-            t.$ta.val(t.$ed.text().trim().length > 0 || t.$ed.find('hr,img,embed,iframe,input').length > 0 ? t.$ed.html() : '');
+            t.$ta.value = 
+                t.$ed.innerText.trim().length > 0 || t.$ed.querySelector('hr,img,embed,iframe,input') ? t.$ed.innerHTML : '';
         },
         syncCode: function (force) {
             var t = this;
-            if (!force && t.$ed.is(':visible')) {
+            if (!force && t.$ed.style !== 'none') {
                 t.syncTextarea();
             } else {
                 // wrap the content in a div it's easier to get the innerhtml
-                var html = $('<div>').html(t.$ta.val());
+                var html = t.doc.createElement('div');
+                html.innerHTML = t.$ta.value;
+
                 //scrub the html before loading into the doc
-                var safe = $('<div>').append(html);
-                $(t.o.tagsToRemove.join(','), safe).remove();
-                t.$ed.html(safe.contents().html());
+                var safe = t.doc.createElement('html');
+                safe.appendChild(html);
+                var rmtags = safe.querySelectorAll(t.o.tagsToRemove.join(','));
+                for (var i = 0; i < rmtags.length; i++) {
+                    rmtags[i].remove();
+                }
+
+                t.$ed.innerHTML(safe.innerHTML);
             }
 
             if (t.o.autogrow) {
-                t.height = t.$ed.height();
-                if (t.height !== t.$ta.css('height')) {
-                    t.$ta.css({height: t.height});
-                    t.$c.trigger('tbwresize');
+                t.height = t.$ed.style.height;
+                if (t.height !== t.$ta.style.height) {
+                    t.$ta.style.height = t.height;
+                    
+                    var tbwresizeev = new CustomEvent('tbwresize');
+                    t.$c.dispatchEvent(tbwresizeev);
                 }
             }
             if (t.o.autogrowOnEnter) {
                 // t.autogrowEditorOnEnter();
-                t.$ed.height('auto');
-                var totalheight = t.autogrowOnEnterWasFocused ? t.$ed[0].scrollHeight : t.$ed.css('min-height');
+                t.$ed.style.height = 'auto';
+                var totalheight = t.autogrowOnEnterWasFocused ? t.$ed[0].scrollHeight : t.$ed.style.minHeight;
                 if (totalheight !== t.$ta.css('height')) {
-                    t.$ed.css({height: totalheight});
-                    t.$c.trigger('tbwresize');
+                    t.$ed.style.height = totalheight;
+                    t.$c.dispatchEvent(new CustomEvent('tbwresize'));
                 }
             }
         },
@@ -1120,41 +1223,110 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
                 t.semanticTag('strike');
 
                 if (full) {
-                    var inlineElementsSelector = t.o.inlineElementsSelector,
-                        blockElementsSelector = ':not(' + inlineElementsSelector + ')';
+                    var inlineElementsSelector = t.o.inlineElementsSelector;
 
                     // Wrap text nodes in span for easier processing
-                    t.$ed.contents().filter(function () {
-                        return this.nodeType === 3 && this.nodeValue.trim().length > 0;
-                    }).wrap('<span data-tbw/>');
+                    for (let edc of t.$ed.childNodes)  {
+                        if (edc.nodeType === 3 && edc.nodeValue.trim().length > 0) {
+                            var pwrapper = t.doc.createElement('span');
+                            pwrapper.dataset.tbw = 1;
+                            edc.parentNode.insertBefore(pwrapper, edc),
+                            pwrapper.appendChild(edc);
+                        }
+                    }
 
                     // Wrap groups of inline elements in paragraphs (recursive)
                     var wrapInlinesInParagraphsFrom = function ($from) {
-                        if ($from.length !== 0) {
-                            var $finalParagraph = $from.nextUntil(blockElementsSelector).addBack().wrapAll('<p/>').parent(),
-                                $nextElement = $finalParagraph.nextAll(inlineElementsSelector).first();
-                            $finalParagraph.next('br').remove();
-                            wrapInlinesInParagraphsFrom($nextElement);
+                        if ($from !== null) {
+                            var curPara = $from;
+                            while (curPara !== null && curPara.querySelector(inlineElementsSelector) !== null) {
+                                var pwrapper = t.doc.createElement('p');
+                                curPara.parentNode.insertBefore(pwrapper, curPara),
+                                pwrapper.appendChild(curPara);
+                                curPara = curPara.nextSibling;
+                            }
+                            
+                            var $finalParagraph;
+                            var $nextElement;
+                            
+                            if (curPara !== null) {
+                                $finalParagraph = curPara.parentNode;
+
+                                while (curPara !== null && !curPara.querySelector(inlineElementsSelector)) {
+                                    curPara = curPara.nextSibling;
+                                }
+                                $nextElement = curPara;
+                            
+                                curPara = $finalParagraph;
+                                if (curPara !== null) {
+                                    while (curPara !== null && !curPara.querySelector('br')) {
+                                        curPara = curPara.nextSibling;
+                                    }
+                                    
+                                    if (curPara !== null && curPara.nodeName.toLowerCase() === 'br') {
+                                        curPara.remove();
+                                    }
+                                }
+
+                                if ($nextElement !== null) {
+                                    wrapInlinesInParagraphsFrom($nextElement);
+                                }
+                            }
                         }
                     };
-                    wrapInlinesInParagraphsFrom(t.$ed.children(inlineElementsSelector).first());
+                    
+                    wrapInlinesInParagraphsFrom(t.$ed.querySelector(inlineElementsSelector));
 
                     t.semanticTag('div', true);
 
                     // Unwrap paragraphs content, containing nothing usefull
-                    t.$ed.find('p').filter(function () {
+                    var uselessPara = t.$ed.querySelectorAll('p');
+                    var filUselessPara = [];
+                    
+                    for (let p of uselessPara) {
                         // Don't remove currently being edited element
-                        if (t.range && this === t.range.startContainer) {
-                            return false;
+                        if (t.range && p === t.range.startContainer) {
+                            continue;
                         }
-                        return $(this).text().trim().length === 0 && $(this).children().not('br,span').length === 0;
-                    }).contents().unwrap();
+                        
+                        if (p.innerText.trim().length === 0 &&
+                            !p.querySelector(':not(br):not(span)')) {
+                            filUselessPara.push(p);
+                        }
+                    }
+                    
+                    //Unwrap the paragraphs
+                    for (let up of filUselessPara) {
+                        for (let upc of up.childNodes) {
+                            let docFrag = document.createDocumentFragment();
+                            while (upc.firstChild) {
+                                let child = upc.removeChild(upc.firstChild);
+                                docFrag.appendChild(child);
+                            }
+
+                            // replace wrapper with document fragment
+                            upc.parentNode.replaceChild(docFrag, upc);
+                        }
+                    }
 
                     // Get rid of temporial span's
-                    $('[data-tbw]', t.$ed).contents().unwrap();
+                    let tempspans = t.$ed.querySelectorAll('[data-tbw]');
+                    for (let ts of tempspans) {
+                        let docFrag = document.createDocumentFragment();
+                        while (ts.firstChild) {
+                            let child = ts.removeChild(ts.firstChild);
+                            docFrag.appendChild(child);
+                        }
+
+                        // replace wrapper with document fragment
+                        ts.parentNode.replaceChild(docFrag, ts);
+                    }
 
                     // Remove empty <p>
-                    t.$ed.find('p:empty').remove();
+                    let emptyEles = t.$ed.querySelectorAll('p:empty');
+                    for (let ee of emptyEles) {
+                        ee.remove();
+                    }
                 }
 
                 if (!keepRange) {
@@ -1176,16 +1348,28 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
                 return;
             }
 
-            $(oldTag, this.$ed).each(function () {
-                var $oldTag = $(this);
-                $oldTag.wrap('<' + newTag + '/>');
+            var oldTags = this.$ed.querySelectorAll(oldTag);
+            
+            for (let $oldTag of oldTags) {
+                let pwrapper = this.doc.createElement(newTag);
+                $oldTag.parentNode.insertBefore(pwrapper, $oldTag),
+                pwrapper.appendChild($oldTag);
+                
                 if (copyAttributes) {
-                    $.each($oldTag.prop('attributes'), function () {
-                        $oldTag.parent().attr(this.name, this.value);
-                    });
+                    for (let [attrkey, attrval] of $oldTag.attributes) {
+                        $oldTag.parentNode.setAttribute(attrkey, attrval);
+                    }
                 }
-                $oldTag.contents().unwrap();
-            });
+                
+                //Unwrap
+                for (let otc of $oldTag.childNodes) {
+                    let docFrag = document.createDocumentFragment();
+                    docFrag.appendChild(otc);
+
+                    // replace wrapper with document fragment
+                    $oldTag.replaceChild(docFrag, otc);
+                }
+            }
         },
 
         // Function call when user click on "Insert Link"
@@ -1203,12 +1387,12 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
             }
 
             if (node && node.nodeName === 'A') {
-                var $a = $(node);
-                text = $a.text();
-                url = $a.attr('href');
+                var $a = node;
+                text = $a.innerText;
+                url = $a.getAttribute('href');
                 if (!t.o.minimalLinks) {
-                    title = $a.attr('title');
-                    target = $a.attr('target');
+                    title = $a.getAttribute('title');
+                    target = $a.getAttribute('target');
                 }
                 var range = t.doc.createRange();
                 range.selectNode(node);
@@ -1248,20 +1432,22 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
                     return false;
                 }
 
-                var link = $(['<a href="', url, '">', v.text || v.url, '</a>'].join(''));
+                var link = t.doc.createElement('a');
+                link.setAttribute('href', url);
+                link.appendChild(t.doc.createTextNode(v.text || v.url));
 
                 if (!t.o.minimalLinks) {
                     if (v.title.length > 0) {
-                        link.attr('title', v.title);
+                        link.setAttribute('title', v.title);
                     }
                     if (v.target.length > 0) {
-                        link.attr('target', v.target);
+                        link.setAttribute('target', v.target);
                     }
                 }
                 t.range.deleteContents();
                 t.range.insertNode(link[0]);
                 t.syncCode();
-                t.$c.trigger('tbwchange');
+                t.$c.dispatchEvent(new CustomEvent('tbwchange'));
                 return true;
             });
         },
@@ -1323,17 +1509,15 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
 
             t.openModalInsert(t.lang.insertImage, options, function (v) { // v are values
                 t.execCmd('insertImage', v.url);
-                var $img = $('img[src="' + v.url + '"]:not([alt])', t.$box);
-                $img.attr('alt', v.alt);
+                var $img = t.$box.querySelector('img[src="' + v.url + '"]:not([alt])');
+                $img.setAttribute('alt', v.alt);
 
                 if (t.o.imageWidthModalEdit) {
-                    $img.attr({
-                        width: v.width
-                    });
+                    $img.setAttribute('width', v.width);
                 }
 
                 t.syncCode();
-                t.$c.trigger('tbwchange');
+                t.$c.dispatchEvent(new CustomEvent('tbwchange'));
 
                 return true;
             });
@@ -1344,11 +1528,11 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
                 fullscreenCssClass = prefix + 'fullscreen',
                 isFullscreen;
 
-            t.$box.toggleClass(fullscreenCssClass);
-            isFullscreen = t.$box.hasClass(fullscreenCssClass);
-            $('body').toggleClass(prefix + 'body-fullscreen', isFullscreen);
-            $(window).trigger('scroll');
-            t.$c.trigger('tbw' + (isFullscreen ? 'open' : 'close') + 'fullscreen');
+            t.$box.classList.toggle(fullscreenCssClass);
+            isFullscreen = t.$box.classList.contains(fullscreenCssClass);
+            t.doc.body.classList.toggle(prefix + 'body-fullscreen', isFullscreen);
+            window.dispatchEvent(new CustomEvent('scroll'));
+            t.$c.dispatchEvent(new CustomEvent('tbw' + (isFullscreen ? 'open' : 'close') + 'fullscreen'));
         },
 
 
@@ -1368,6 +1552,7 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
             try {
                 t.doc.execCommand('styleWithCSS', false, forceCss || false);
             } catch (c) {
+                console.error(c);
             }
 
             try {
@@ -1390,19 +1575,27 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
 
                 if (cmd !== 'dropdown') {
                     t.updateButtonPaneStatus();
-                    t.$c.trigger('tbwchange');
+                    t.$c.dispatchEvent(new CustomEvent('tbwchange'));
                 }
             }
         },
 
 
+        cancelModalHandler: function () {
+            let openedModal = this.doc.querySelector(this.o.prefix + 'modal');
+            if (openedModal) {
+                openedModal.dispatchEvent(new CustomEvent(CANCEL_EVENT));
+            }
+            this.$overlay.removeEventListener('click', this.cancelModalHandler);
+            return false;
+        },
         // Open a modal box
         openModal: function (title, content) {
             var t = this,
                 prefix = t.o.prefix;
 
             // No open a modal box when exist other modal box
-            if ($('.' + prefix + 'modal-box', t.$box).length > 0) {
+            if (t.$box.querySelector('.' + prefix + 'modal-box')) {
                 return false;
             }
             if (t.o.autogrowOnEnter) {
@@ -1413,76 +1606,67 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
             t.showOverlay();
 
             // Disable all btnPane btns
-            t.$btnPane.addClass(prefix + 'disable');
+            t.$btnPane.classList.add(prefix + 'disable');
 
             // Build out of ModalBox, it's the mask for animations
-            var $modal = $('<div/>', {
-                class: prefix + 'modal ' + prefix + 'fixed-top'
-            }).css({
-                top: t.$btnPane.height()
-            }).appendTo(t.$box);
+            var $modal = t.doc.createElement('div');
+            $modal.className = prefix + 'modal ' + prefix + 'fixed-top';
+            $modal.style.top = t.$btnPane.style.height;
+            t.$box.appendChild($modal);
 
             // Click on overlay close modal by cancelling them
-            t.$overlay.one('click', function () {
-                $modal.trigger(CANCEL_EVENT);
-                return false;
-            });
+            t.$overlay.addEventListener('click', t.cancelModalHandler);
 
             // Build the form
-            var $form = $('<form/>', {
-                action: '',
-                html: content
-            })
-                .on('submit', function () {
-                    $modal.trigger(CONFIRM_EVENT);
-                    return false;
-                })
-                .on('reset', function () {
-                    $modal.trigger(CANCEL_EVENT);
-                    return false;
-                })
-                .on('submit reset', function () {
-                    if (t.o.autogrowOnEnter) {
-                        t.autogrowOnEnterDontClose = false;
-                    }
-                });
-
+            var $form = t.doc.createElement('form');
+            $form.setAttribute('action', '');
+            $form.innerHTML = content;
+            $form.addEventListener('submit', function () {
+                $modal.dispatchEvent(new CustomEvent(CONFIRM_EVENT));
+            });
+            $form.addEventListener('reset', function () {
+                $modal.dispatchEvent(new CustomEvent(CANCEL_EVENT));
+                return false;
+            });
+            $form.addEventListener('submit', function () {
+                if (t.o.autogrowOnEnter) {
+                    t.autogrowOnEnterDontClose = false;
+                }
+            });
+            $form.addEventListener('reset', function () {
+                if (t.o.autogrowOnEnter) {
+                    t.autogrowOnEnterDontClose = false;
+                }
+            });
 
             // Build ModalBox and animate to show them
-            var $box = $('<div/>', {
-                class: prefix + 'modal-box',
-                html: $form
-            })
-                .css({
-                    top: '-' + t.$btnPane.outerHeight() + 'px',
-                    opacity: 0
-                })
-                .appendTo($modal)
-                .animate({
-                    top: 0,
-                    opacity: 1
-                }, 100);
-
+            var $box = t.doc.createElement('div');
+            $box.className = prefix + 'modal-box';
+            $box.appendChild($form);
+            $box.style.top = '-' + t.$btnPane.offsetHeight + 'px';
+            $box.style.opacity = 0;
+            $modal.appendChild($box);
 
             // Append title
-            $('<span/>', {
-                text: title,
-                class: prefix + 'modal-title'
-            }).prependTo($box);
+            var titlespan = t.doc.createElement('span');
+            titlespan.setAttribute('text', title);
+            titlespan.className = prefix + 'modal-title';
+            $box.insertBefore(titlespan, $form);
 
-            $modal.height($box.outerHeight() + 10);
-
+            $modal.style.height = $box.offsetHeight + 10;
 
             // Focus in modal box
-            $('input:first', $box).focus();
-
+            let firstInput = $box.querySelector('input:first');
+            if (firstInput) {
+                firstInput.focus();
+            }
 
             // Append Confirm and Cancel buttons
             t.buildModalBtn('submit', $box);
             t.buildModalBtn('reset', $box);
 
 
-            $(window).trigger('scroll');
+            window.dispatchEvent(new CustomEvent('scroll'));
 
             return $modal;
         },
@@ -1491,29 +1675,29 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
             var t = this,
                 prefix = t.o.prefix;
 
-            return $('<button/>', {
-                class: prefix + 'modal-button ' + prefix + 'modal-' + n,
-                type: n,
-                text: t.lang[n] || n
-            }).appendTo($('form', $modal));
+            var modalButton = t.doc.createElement('button');
+            modalButton.className = prefix + 'modal-button ' + prefix + 'modal-' + n;
+            modalButton.setAttribute('type', n);
+            modalButton.innerText = t.lang[n] || n;
+            let form = $modal.querySelector('form');
+            if (form) {
+                form.appendChild(modalButton);
+            }
+            return modalButton;
         },
         // close current modal box
         closeModal: function () {
             var t = this,
                 prefix = t.o.prefix;
 
-            t.$btnPane.removeClass(prefix + 'disable');
-            t.$overlay.off();
+            t.$btnPane.classList.remove(prefix + 'disable');
+            t.$overlay.removeEventListener('click', t.cancelHandler);
 
             // Find the modal box
-            var $modalBox = $('.' + prefix + 'modal-box', t.$box);
+            var $modalBox = t.$box.querySelector('.' + prefix + 'modal-box');
 
-            $modalBox.animate({
-                top: '-' + $modalBox.height()
-            }, 100, function () {
-                $modalBox.parent().remove();
-                t.hideOverlay();
-            });
+            $modalBox.parentNode.remove();
+            t.hideOverlay();
 
             t.restoreRange();
         },
@@ -1524,7 +1708,7 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
                 lg = t.lang,
                 html = '';
 
-            $.each(fields, function (fieldName, field) {
+            for (let [fieldName, field] of fields) {
                 var l = field.label || fieldName,
                     n = field.name || fieldName,
                     a = field.attributes || {};
@@ -1538,83 +1722,94 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
                     '"' + attr + '><span class="' + prefix + 'input-infos"><span>' +
                     (lg[l] ? lg[l] : l) +
                     '</span></span></label>';
-            });
+            }
 
-            return t.openModal(title, html)
-                .on(CONFIRM_EVENT, function () {
-                    var $form = $('form', $(this)),
-                        valid = true,
-                        values = {};
+            var theOpenModal = t.openModal(title, html);
+            function confirmHandler (ev) {
+                var $form = ev.target.querySelector('form'),
+                    valid = true,
+                    values = {};
 
-                    $.each(fields, function (fieldName, field) {
-                        var n = field.name || fieldName;
+                for (let [fieldName, field] of fields) {
+                    var n = field.name || fieldName;
 
-                        var $field = $('input[name="' + n + '"]', $form),
-                            inputType = $field.attr('type');
+                    var $field = $form.querySelector('input[name="' + n + '"]'),
+                        inputType = $field.getAttribute('type');
+                    
+                    let checkedradio = $field.querySelector(':checked');
 
-                        switch (inputType.toLowerCase()) {
-                            case 'checkbox':
-                                values[n] = $field.is(':checked');
-                                break;
-                            case 'radio':
-                                values[n] = $field.filter(':checked').val();
-                                break;
-                            default:
-                                values[n] = $.trim($field.val());
-                                break;
+                    switch (inputType.toLowerCase()) {
+                    case 'checkbox':
+                        values[n] = $field.getAttribute('checked');
+                        break;
+                    case 'radio':
+                        if (checkedradio) {
+                            values[n] = checkedradio.value;
                         }
-                        // Validate value
-                        if (field.required && values[n] === '') {
-                            valid = false;
-                            t.addErrorOnModalField($field, t.lang.required);
-                        } else if (field.pattern && !field.pattern.test(values[n])) {
-                            valid = false;
-                            t.addErrorOnModalField($field, field.patternError);
-                        }
-                    });
-
-                    if (valid) {
-                        t.restoreRange();
-
-                        if (cmd(values, fields)) {
-                            t.syncCode();
-                            t.$c.trigger('tbwchange');
-                            t.closeModal();
-                            $(this).off(CONFIRM_EVENT);
-                        }
+                        break;
+                    default:
+                        values[n] = $field.value.trim();
+                        break;
                     }
-                })
-                .one(CANCEL_EVENT, function () {
-                    $(this).off(CONFIRM_EVENT);
-                    t.closeModal();
-                });
+                    // Validate value
+                    if (field.required && values[n] === '') {
+                        valid = false;
+                        t.addErrorOnModalField($field, t.lang.required);
+                    } else if (field.pattern && !field.pattern.test(values[n])) {
+                        valid = false;
+                        t.addErrorOnModalField($field, field.patternError);
+                    }
+                }
+
+                if (valid) {
+                    t.restoreRange();
+
+                    if (cmd(values, fields)) {
+                        t.syncCode();
+                        t.$c.dispatchEvent(new CustomEvent('tbwchange'));
+                        t.closeModal();
+                        ev.target.removeEventListener(CONFIRM_EVENT, confirmHandler);
+                    }
+                }
+            }
+            theOpenModal.addEventListener(CONFIRM_EVENT, confirmHandler);
+            
+            function cancelHandler (ev) {
+                ev.target.removeEventListener(CONFIRM_EVENT, confirmHandler);
+                t.closeModal();
+                ev.target.removeEventListener(CANCEL_EVENT, cancelHandler);
+            }
+            theOpenModal.addEventListener(CANCEL_EVENT, cancelHandler);
+    
+            return theOpenModal;
         },
         addErrorOnModalField: function ($field, err) {
             var prefix = this.o.prefix,
-                $label = $field.parent();
+                $label = $field.parentNode;
 
-            $field
-                .on('change keyup', function () {
-                    $label.removeClass(prefix + 'input-error');
-                });
+            $field.addEventListener('change', function () {
+                $label.classList.remove(prefix + 'input-error');
+            });
+            $field.addEventListener('keyup', function () {
+                $label.classList.remove(prefix + 'input-error');
+            });
 
-            $label
-                .addClass(prefix + 'input-error')
-                .find('input+span')
-                .append(
-                    $('<span/>', {
-                        class: prefix + 'msg-error',
-                        text: err
-                    })
-                );
+            var errorLabel = $label.classList(prefix + 'input-error');
+            var errorSpan = this.doc.createElement('span');
+            errorSpan.className = prefix + 'msg-error';
+            errorSpan.innerText = err;
+            errorLabel.appendChild(errorSpan);
         },
 
-        getDefaultImgDblClickHandler: function () {
+        getDefaultImgDblClickHandler: function (ev) {
+            if (ev.target.nodeName.toLowerCase() !== 'img') {
+                return;
+            }
             var t = this;
 
             return function () {
-                var $img = $(this),
-                    src = $img.attr('src'),
+                var $img = ev.target,
+                    src = $img.getAttribute('src'),
                     base64 = '(Base64)';
 
                 if (src.indexOf('data:image') === 0) {
@@ -1629,21 +1824,19 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
                     },
                     alt: {
                         label: t.lang.description,
-                        value: $img.attr('alt')
+                        value: $img.getAttribute('alt')
                     }
                 };
 
                 if (t.o.imageWidthModalEdit) {
                     options.width = {
-                        value: $img.attr('width') ? $img.attr('width') : ''
+                        value: $img.style.width ? $img.style.width : ''
                     };
                 }
 
                 t.openModalInsert(t.lang.insertImage, options, function (v) {
                     if (v.url !== base64) {
-                        $img.attr({
-                            src: v.url
-                        });
+                        $img.setAttribute('src', v.url);
                     }
                     $img.attr({
                         alt: v.alt
@@ -1651,11 +1844,9 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
 
                     if (t.o.imageWidthModalEdit) {
                         if (parseInt(v.width) > 0) {
-                            $img.attr({
-                                width: v.width
-                            });
+                            $img.style.width = v.width;
                         } else {
-                            $img.removeAttr('width');
+                            $img.style.width = 'auto';
                         }
                     }
 
@@ -1676,7 +1867,7 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
                 var savedRange = t.range = documentSelection.getRangeAt(0),
                     range = t.doc.createRange(),
                     rangeStart;
-                range.selectNodeContents(t.$ed[0]);
+                range.selectNodeContents(t.$ed);
                 range.setEnd(savedRange.startContainer, savedRange.startOffset);
                 rangeStart = (range + '').length;
                 t.metaRange = {
@@ -1742,22 +1933,27 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
                 tags = t.getTagsRecursive(t.doc.getSelection().focusNode),
                 activeClasses = prefix + 'active-button ' + prefix + 'active';
 
-            $('.' + prefix + 'active-button', t.$btnPane).removeClass(activeClasses);
-            $.each(tags, function (i, tag) {
+            let activePaneButton = t.$btnPane.querySelector('.' + prefix + 'active-button');
+            if (activePaneButton) {
+                activePaneButton.classList.remove(activeClasses);
+            }
+            for (var tag of tags) {
                 var btnName = t.tagToButton[tag.toLowerCase()],
-                    $btn = $('.' + prefix + btnName + '-button', t.$btnPane);
+                    $btn = t.$btnPane.querySelector('.' + prefix + btnName + '-button');
 
-                if ($btn.length > 0) {
+                if ($btn) {
                     $btn.addClass(activeClasses);
                 } else {
-                    try {
-                        $btn = $('.' + prefix + 'dropdown .' + prefix + btnName + '-dropdown-button', t.$box);
-                        var dropdownBtnName = $btn.parent().data('dropdown');
-                        $('.' + prefix + dropdownBtnName + '-button', t.$box).addClass(activeClasses);
-                    } catch (e) {
+                    $btn = t.$box.querySelector('.' + prefix + 'dropdown .' + prefix + btnName + '-dropdown-button');
+                    if ($btn) {
+                        let dropdownBtnName = $btn.parentNode.datasetdropdown;
+                        let dropdownButton = t.$box.querySelector('.' + prefix + dropdownBtnName + '-button');
+                        if (dropdownButton) {
+                            dropdownButton.classList.add(activeClasses);
+                        }
                     }
                 }
-            });
+            }
         },
         getTagsRecursive: function (element, tags) {
             var t = this;
@@ -1777,9 +1973,9 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
                 tags.push(element.style.textAlign);
             }
 
-            $.each(t.tagHandlers, function (i, tagHandler) {
+            for (var tagHandler of t.tagHandlers) {
                 tags = tags.concat(tagHandler(element, t));
-            });
+            }
 
             tags.push(tag);
 
@@ -1792,7 +1988,7 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
         initPlugins: function () {
             var t = this;
             t.loadedPlugins = [];
-            $.each($.trumbowyg.plugins, function (name, plugin) {
+            for (let plugin of Object.values(trumbowyg.plugins)) {
                 if (!plugin.shouldInit || plugin.shouldInit(t)) {
                     plugin.init(t);
                     if (plugin.tagHandler) {
@@ -1800,14 +1996,14 @@ Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
                     }
                     t.loadedPlugins.push(plugin);
                 }
-            });
+            }
         },
         destroyPlugins: function () {
-            $.each(this.loadedPlugins, function (i, plugin) {
+            for (var plugin of this.loadedPlugins) {
                 if (plugin.destroy) {
                     plugin.destroy();
                 }
-            });
+            }
         }
     };
-})(navigator, window, document, jQuery);
+})(navigator, window, document, trumbowyg, activeTrumbowygs);
