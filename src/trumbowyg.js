@@ -1362,13 +1362,14 @@ var activeTrumbowygs = [];
                 }
                 
                 //Unwrap
-                for (let otc of $oldTag.childNodes) {
-                    let docFrag = document.createDocumentFragment();
-                    docFrag.appendChild(otc);
-
-                    // replace wrapper with document fragment
-                    $oldTag.replaceChild(docFrag, otc);
+                let docFrag = document.createDocumentFragment();
+                while ($oldTag.firstChild) {
+                    var child = $oldTag.removeChild($oldTag.firstChild);
+                    docFrag.appendChild(child);
                 }
+
+                // replace wrapper with document fragment
+                $oldTag.parentNode.replaceChild(docFrag, $oldTag);
             }
         },
 
