@@ -3,7 +3,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const SpriteLoaderPlugin = require('svg-sprite-loader/plugin');
 
 module.exports = {
-    entry: ['babel-polyfill', './src/trumbowyg.js'],
+    entry: ['./src/assets.js', './src/trumbowyg.js'],
     output: {
         path: __dirname + '/dist',
         publicPath: '../',

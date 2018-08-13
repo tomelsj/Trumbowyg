@@ -53,6 +53,22 @@ Trumbowyg is a simple and lightweight WYSIWYG editor, weight only 20kB minifed (
 Visit presentation page: http://alex-d.github.io/Trumbowyg/
 
 
+## Info for the nojquery branch
+
+The "nojquery" branch does not require jquery. However it use features from ES6 (next generation javascript) so your
+webbrowser might not support it. You could try using various polyfills for fetch, promise and interator. Note that 
+the bransh is expreimental so some features might not work and are prone to errors. Also plugins do not work (yet).
+The build tools have been changed to webpack so you might need to install it. As for now, this is how you invoke
+Trumbowyg:
+
+```js
+var element = document.getElementById("sometextarea");
+trumbowyg.trumbowyg.init(element, options, params);
+```
+
+So it is different from the jquery version. Note that "trumbowyg.trumbowyg" is not a typo.
+
+
 ## Documentation
 
 All you need to know about Trumbowyg is here: http://alex-d.github.io/Trumbowyg/documentation/ (or even [on the home](http://alex-d.github.io/Trumbowyg/#get-started))
@@ -68,7 +84,7 @@ First, fork and clone the repository
 ```bash
 cd Trumbowyg # to go into the project's root directory
 npm install # to install development dependencies
-npm run build # to build the js and css files
+npm run build # to build the project
 ```
 
 

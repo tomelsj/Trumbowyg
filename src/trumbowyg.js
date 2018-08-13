@@ -1,42 +1,3 @@
-import './ui/sass/trumbowyg.scss';
-
-import './ui/icons/blockquote.svg';
-import './ui/icons/bold.svg';
-import './ui/icons/close.svg';
-import './ui/icons/create-link.svg';
-import './ui/icons/del.svg';
-import './ui/icons/em.svg';
-import './ui/icons//fontsize.svg';
-import './ui/icons//fullscreen.svg';
-import './ui/icons//h1.svg';
-import './ui/icons//h2.svg';
-import './ui/icons//h3.svg';
-import './ui/icons//h4.svg';
-import './ui/icons/horizontal-rule.svg';
-import './ui/icons/insert-image.svg';
-import './ui/icons/italic.svg';
-import './ui/icons/justify-center.svg';
-import './ui/icons/justify-full.svg';
-import './ui/icons/justify-left.svg';
-import './ui/icons/justify-right.svg';
-import './ui/icons/lineheight.svg';
-import './ui/icons/link.svg';
-import './ui/icons/ordered-list.svg';
-import './ui/icons/p.svg';
-import './ui/icons/redo.svg';
-import './ui/icons/removeformat.svg';
-import './ui/icons/strikethrough.svg';
-import './ui/icons/strong.svg';
-import './ui/icons/subscript.svg';
-import './ui/icons/superscript.svg';
-import './ui/icons/table.svg';
-import './ui/icons/underline.svg';
-import './ui/icons/undo.svg';
-import './ui/icons/unlink.svg';
-import './ui/icons/unordered-list.svg';
-import './ui/icons/view-html.svg';
-
-
 export var trumbowyg = {
     langs: {
         en: {
@@ -161,8 +122,9 @@ var activeTrumbowygs = [];
     var CONFIRM_EVENT = 'tbwconfirm',
         CANCEL_EVENT = 'tbwcancel';
 
-    trumbowyg.init = function (element, options, params) {
-        var trumbowygDataName = 'trumbowyg';
+    /** Set up trumbowyg element from the element, it must be appended to the document */
+    trumbowyg.init = function (element, options) {
+        let trumbowygDataName = 'trumbowyg';
         if (options === Object(options) || !options) {
             let elearr = element;
             if (!Array.isArray(elearr)) {
@@ -178,10 +140,56 @@ var activeTrumbowygs = [];
             
             return element;
         }
-        if (element.length === 1) {
+
+        return false;
+    };
+    
+    /** Get trumbowyg from element, can also be a index string */
+    trumbowyg.getFromElement = function (element) {
+        let trumbowygDataName = 'trumbowyg';
+        let trumbowygObj;
+        let isdomelement = false;
+        
+        if (!element) {
+            return false;
+        }
+        
+        try {
+            //Using W3 DOM2 (works for FF, Opera and Chrome)
+            isdomelement = element instanceof HTMLElement;
+        }
+        catch (e){
+            //Browsers not supporting W3 DOM2 don't have HTMLElement and
+            //an exception is thrown and we end up here. Testing some
+            //properties that all elements have (works on IE7)
+            isdomelement = (typeof element === 'object') &&
+                (element.nodeType === 1) && (typeof element.style === 'object') &&
+                (typeof element.ownerDocument === 'object');
+        }
+        
+        if (isdomelement) {
+            if (element.dataset[trumbowygDataName] && activeTrumbowygs[element.dataset[trumbowygDataName]]) {
+                trumbowygObj = activeTrumbowygs[element.dataset[trumbowygDataName]];
+            }
+        } else {
+            if (activeTrumbowygs[element]) {
+                trumbowygObj = activeTrumbowygs[element];
+            }
+        }
+        
+        if (trumbowygObj) {
+            return trumbowygObj;
+        }
+        
+        return false;
+    };
+    
+    /** Run the given command on the trumbowyg element and return the result */
+    trumbowyg.commandElement = function (element, command, params) {
+        let t = trumbowyg.getFromElement(element);
+        if (t) {
             try {
-                var t = activeTrumbowygs[element.dataset[trumbowygDataName]];
-                switch (options) {
+                switch (command) {
                 // Exec command
                 case 'execCmd':
                     return t.execCmd(params.cmd, params.param, params.forceCss);
@@ -231,7 +239,7 @@ var activeTrumbowygs = [];
                 console.error(e);
             }
         }
-
+        
         return false;
     };
 
